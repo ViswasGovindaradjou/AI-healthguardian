@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Guardian - Medical Report Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+        }
+
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            }
+        }
+
+        @keyframes fillProgress {
+            from {
+                width: 0%;
+            }
+            to {
+                width: var(--progress-value);
+            }
+        }
+
+        @keyframes spin-loader {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .animate-slideInRight {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .animate-fillProgress {
+            animation: fillProgress 1.5s ease-out forwards;
+        }
+
+        .animate-spin-loader {
+            animation: spin-loader 1s linear infinite;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .glass {
+            background: rgba(30, 30, 46, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-dark {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(59, 130, 246, 0.15);
+        }
+
+        .disease-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .disease-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .disease-card:hover::before {
+            left: 100%;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .risk-badge-green {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .risk-badge-yellow {
+            background: rgba(251, 146, 60, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(251, 146, 60, 0.3);
+        }
+
+        .risk-badge-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .progress-bar-container {
+            position: relative;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #0891b2);
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+
+        .circular-progress svg {
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress-circle {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke: url(#gradient);
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .circular-progress-bg {
+            fill: none;
+            stroke-width: 6;
+            stroke: rgba(0, 0, 0, 0.05);
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .show-section {
+            display: block;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .drop-zone {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.dragover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .stagger-delay-1 { animation-delay: 0.1s; }
+        .stagger-delay-2 { animation-delay: 0.2s; }
+        .stagger-delay-3 { animation-delay: 0.3s; }
+        .stagger-delay-4 { animation-delay: 0.4s; }
+        .stagger-delay-5 { animation-delay: 0.5s; }
+        .stagger-delay-6 { animation-delay: 0.6s; }
+
+        .section-reveal {
+            opacity: 0;
+        }
+
+        .section-reveal.visible {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .report-section {
+            border-left: 4px solid #3b82f6;
+            padding-left: 1.5rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .report-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 0.75rem;
+        }
+
+        .report-content {
+            color: #d1d5db;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .report-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .report-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .report-list li:before {
+            content: "◆";
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+            font-size: 0.75rem;
+        }
+
+        .report-highlight {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .report-disclaimer {
+            background: rgba(251, 146, 60, 0.05);
+            border-left: 4px solid #fb923c;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #fed7aa;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100">
+
+    <!-- HERO SECTION -->
+    <section class="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800">
+        <div class="absolute inset-0 opacity-5">
+            <div class="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-screen filter blur-3xl"></div>
+            <div class="absolute bottom-20 right-10 w-72 h-72 bg-teal-400 rounded-full mix-blend-screen filter blur-3xl"></div>
+        </div>
+
+        <div class="text-center z-10 max-w-4xl mx-auto animate-fadeInUp">
+            <div class="mb-8 animate-float">
+                <div class="text-6xl mb-4">🏥</div>
+                <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+                    AI Health Guardian
+                </h1>
+            </div>
+
+            <p class="text-lg md:text-xl text-gray-300 mb-8 font-light max-w-2xl mx-auto">
+                Upload your medical reports and get AI-powered disease risk analysis
+            </p>
+
+            <div class="flex justify-center gap-4 flex-wrap">
+                <button onclick="scrollToUpload()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
+                    Start Analysis
+                </button>
+                <button onclick="toggleAboutSection()"
+class="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-gray-100 font-semibold rounded-lg border border-gray-700 transition-all">
+    Learn More
+</button>
+            </div>
+        </div>
+    </section>
+<section id="about-project" class="hidden py-20 px-4 bg-gray-900 border-b border-gray-800">
+    <div class="max-w-5xl mx-auto">
+
+        <h2 class="text-4xl font-bold text-center text-white mb-8">
+            About AI Health Guardian
+        </h2>
+
+        <div class="glass-dark rounded-xl p-8">
+
+            <p class="text-gray-300 text-lg leading-relaxed">
+                AI Health Guardian is an intelligent healthcare platform that
+                helps users understand their medical reports through Artificial
+                Intelligence and Machine Learning.
+            </p>
+
+            <p class="text-gray-300 text-lg leading-relaxed mt-4">
+                The platform analyzes medical information and predicts risks
+                associated with major diseases including Diabetes, Heart
+                Disease, Kidney Disease, Liver Disease, and Stroke.
+            </p>
+
+            <p class="text-gray-300 text-lg leading-relaxed mt-4">
+                Users receive a detailed health assessment, risk visualization,
+                personalized recommendations, and preventive health guidance
+                in a simple and easy-to-understand format.
+            </p>
+
+            <div class="mt-8">
+                <h3 class="text-2xl font-semibold text-blue-400 mb-4">
+                    Key Features
+                </h3>
+
+                <ul class="list-disc ml-6 text-gray-300 space-y-2">
+                    <li>Medical Report Analysis</li>
+                    <li>AI-Based Disease Risk Prediction</li>
+                    <li>Health Score Evaluation</li>
+                    <li>Personalized Recommendations</li>
+                    <li>Interactive Dashboard</li>
+                    <li>Downloadable Health Reports</li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+    <!-- UPLOAD SECTION -->
+    <section id="upload-section" class="py-20 px-4 bg-gray-950 border-b border-gray-800">
+        <div class="max-w-4xl mx-auto animate-fadeInUp">
+            <h2 class="text-3xl font-bold text-gray-100 text-center mb-4">Medical Report Analysis</h2>
+            <p class="text-gray-400 text-center mb-12">Upload your PDF report to receive comprehensive AI-powered analysis</p>
+
+            <div class="glass-dark rounded-xl p-8 md:p-12 card-hover border border-gray-700">
+                <div class="drop-zone border-2 border-dashed border-gray-600 rounded-lg p-8 md:p-12 text-center transition-all" id="dropZone">
+                    <input
+                        type="file"
+                        id="pdfFile"
+                        accept=".pdf"
+                        class="hidden"
+                    >
+
+                    <div class="mb-6">
+                        <div class="text-5xl mb-4">📄</div>
+                        <h3 class="text-xl font-semibold text-gray-100 mb-2">Upload PDF Report</h3>
+                        <p class="text-gray-400 mb-4 text-sm">Drag and drop your medical report or click to browse</p>
+                    </div>
+
+                    <button
+                        onclick="document.getElementById('pdfFile').click()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 mb-4"
+                    >
+                        Browse Files
+                    </button>
+
+                    <p class="text-xs text-gray-500">Supported format: PDF</p>
+                </div>
+
+                <!-- File Selected Display -->
+                <div id="fileSelected" class="hidden mt-6 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl text-green-500">✓</span>
+                            <div>
+                                <p class="font-semibold text-gray-100" id="fileName"></p>
+                                <p class="text-xs text-gray-400" id="fileSize"></p>
+                            </div>
+                        </div>
+                        <button onclick="clearFile()" class="text-gray-400 hover:text-gray-200 font-bold">✕</button>
+                    </div>
+                </div>
+
+                <!-- Analyze Button -->
+                <button
+                    onclick="analyzeReport()"
+                    id="analyzeBtn"
+                    class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold shadow-lg transition-all duration-300"
+                >
+                    Analyze Report
+                </button>
+
+                <!-- Loading State -->
+                <div id="loading" class="hidden mt-6 text-center">
+                    <div class="inline-block">
+                        <div class="w-8 h-8 border-4 border-gray-700 border-t-blue-600 rounded-full animate-spin-loader mb-4"></div>
+                    </div>
+                    <p class="text-gray-300 font-semibold">Analyzing medical report...</p>
+                    <p class="text-xs text-gray-500 mt-2">Processing may take 10-15 seconds</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="error" class="hidden mt-6 p-4 bg-gray-900 border border-red-900 rounded-lg">
+                    <p class="text-red-400 font-semibold">⚠️ Error</p>
+                    <p id="errorMessage" class="text-red-400 text-sm mt-1"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section id="resultsContainer" class="hidden-section py-20 px-4 bg-gray-950">
+        <div class="max-w-7xl mx-auto">
+            <!-- Health Score -->
+            <div class="mb-16 animate-fadeInUp">
+                <h2 class="text-3xl font-bold text-gray-100 text-center mb-8">Patient Health Overview</h2>
+                
+                <div class="glass-dark rounded-xl p-8 md:p-12 card-hover max-w-2xl mx-auto border border-gray-700">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="text-center">
+                            <div class="circular-progress">
+                                <svg viewBox="0 0 120 120" width="120" height="120">
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle cx="60" cy="60" r="54" class="circular-progress-bg" stroke="#374151"></circle>
+                                    <circle cx="60" cy="60" r="54" class="circular-progress-circle" id="healthCircle" style="stroke-dasharray: 339.29; stroke-dashoffset: 339.29;"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <div class="text-3xl font-bold text-gray-100" id="healthScore">0</div>
+                                    <div class="text-xs text-gray-400">out of 100</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-100 mb-4">Overall Health Score</h3>
+                            <p class="text-gray-400 mb-6 text-sm">Based on comprehensive analysis of 5 major disease risk factors. Lower score indicates better health outcomes.</p>
+                            <div id="scoreInterpretation" class="text-base font-semibold text-blue-400"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disease Risk Cards -->
+            <div class="mb-16 animate-fadeInUp stagger-delay-1">
+                <h2 class="text-3xl font-bold text-gray-100 text-center mb-8">Disease Risk Assessment</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6" id="diseaseCards">
+                    <!-- Cards will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Progress Bars -->
+            <div class="mb-16 animate-fadeInUp stagger-delay-2">
+                <h2 class="text-3xl font-bold text-gray-100 text-center mb-8">Risk Level Distribution</h2>
+                
+                <div class="glass-dark rounded-xl p-8 card-hover border border-gray-700">
+                    <div id="progressBars" class="space-y-6">
+                        <!-- Progress bars will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Profile -->
+            <div class="mb-16 animate-fadeInUp stagger-delay-3">
+                <h2 class="text-3xl font-bold text-gray-100 text-center mb-8">Patient Information</h2>
+                
+                <div class="glass-dark rounded-xl p-8 card-hover border border-gray-700">
+                    <div id="profileGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Profile cards will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Report -->
+            <div class="mb-16 animate-fadeInUp stagger-delay-4">
+                <h2 class="text-3xl font-bold text-gray-100 text-center mb-8">Clinical Analysis Report</h2>
+                
+                <div class="glass-dark rounded-xl p-8 md:p-12 card-hover border border-gray-700">
+                    <div id="aiReportContainer" class="space-y-6">
+                        <!-- Report will be generated by JavaScript with proper formatting -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center gap-4 flex-wrap mb-8 animate-fadeInUp stagger-delay-5">
+                <button onclick="downloadReport()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all">
+                    📥 Download Report
+                </button>
+                <button onclick="newAnalysis()" class="px-8 py-3 bg-gray-800 hover:bg-gray-700 text-gray-100 font-semibold rounded-lg border border-gray-700 transition-all">
+                    🔄 New Analysis
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-8 px-4">
+        <div class="max-w-7xl mx-auto text-center text-gray-500">
+            <p class="mb-2"><span class="font-bold text-gray-300">AI Health Guardian</span></p>
+            <p class="text-sm">Clinical Medical Report Analysis Platform</p>
+            <p class="text-xs mt-4 text-gray-600">⚠️ Diagnostic support tool only. Not a substitute for professional medical consultation.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Configuration
+        const API_ENDPOINT = 'http://127.0.0.1:8000/analyze-report';
+
+        // Disease information
+        const diseases = {
+            diabetes: { name: 'Diabetes', icon: '🩸', color: 'red' },
+            heart: { name: 'Heart Disease', icon: '❤️', color: 'red' },
+            kidney: { name: 'Kidney Disease', icon: '🟣', color: 'purple' },
+            liver: { name: 'Liver Disease', icon: '🟢', color: 'green' },
+            stroke: { name: 'Stroke', icon: '🧠', color: 'blue' }
+        };
+
+        let currentData = null;
+
+        // ============ FILE UPLOAD HANDLERS ============
+        
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('pdfFile');
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                displayFileSelected();
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', displayFileSelected);
+
+        function displayFileSelected() {
+            const file = fileInput.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                document.getElementById('fileSelected').classList.remove('hidden');
+            }
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            document.getElementById('fileSelected').classList.add('hidden');
+        }
+
+        // ============ ANALYSIS FUNCTION ============
+
+        async function analyzeReport() {
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showError('Please select a PDF report.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                currentData = data;
+
+                // Hide loading and display results
+                document.getElementById('loading').classList.add('hidden');
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('analyzeBtn').disabled = false;
+                showError('Failed to analyze report. Please check the backend connection and try again.');
+            }
+        }
+
+        // ============ DISPLAY FUNCTIONS ============
+
+        function displayResults(data) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.classList.remove('hidden-section');
+            resultsContainer.classList.add('show-section');
+
+            // Display health score
+            displayHealthScore(data);
+
+            // Display disease cards
+            displayDiseaseCards(data);
+
+            // Display progress bars
+            displayProgressBars(data);
+
+            // Display patient profile
+            displayPatientProfile(data);
+
+            // Display AI report
+            displayAIReport(data);
+
+            // Scroll to results
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+
+        function displayHealthScore(data) {
+            const risks = [
+                data.results.diabetes.risk,
+                data.results.heart.risk,
+                data.results.kidney.risk,
+                data.results.liver.risk,
+                data.results.stroke.risk
+            ];
+
+            const avgRisk = Math.round(risks.reduce((a, b) => a + b) / risks.length);
+            const healthScore = 100 - avgRisk;
+
+            // Animate circle
+            const circle = document.getElementById('healthCircle');
+            const circumference = 2 * Math.PI * 54;
+            const offset = circumference - (healthScore / 100) * circumference;
+            
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 100);
+
+            document.getElementById('healthScore').textContent = healthScore;
+
+            // Set interpretation
+            let interpretation = '';
+            if (healthScore >= 80) {
+                interpretation = '✓ Low Risk Profile - Favorable health indicators across all categories';
+            } else if (healthScore >= 60) {
+                interpretation = '⚠ Moderate Risk Profile - Regular monitoring recommended';
+            } else if (healthScore >= 40) {
+                interpretation = '⚠ Elevated Risk Profile - Professional medical consultation advised';
+            } else {
+                interpretation = '⚠ High Risk Profile - Immediate medical evaluation recommended';
+            }
+
+            document.getElementById('scoreInterpretation').textContent = interpretation;
+        }
+
+        function getRiskBadgeClass(risk) {
+            if (risk >= 71) return 'risk-badge-red';
+            if (risk >= 31) return 'risk-badge-yellow';
+            return 'risk-badge-green';
+        }
+
+        function getRiskBadgeText(risk) {
+            if (risk >= 71) return 'High Risk';
+            if (risk >= 31) return 'Moderate Risk';
+            return 'Low Risk';
+        }
+
+        function displayDiseaseCards(data) {
+            const cardsContainer = document.getElementById('diseaseCards');
+            cardsContainer.innerHTML = '';
+
+            const diseaseKeys = ['diabetes', 'heart', 'kidney', 'liver', 'stroke'];
+            const delays = [0, 1, 2, 3, 4];
+
+            diseaseKeys.forEach((key, index) => {
+                const disease = diseases[key];
+                const risk = data.results[key].risk;
+                const badgeClass = getRiskBadgeClass(risk);
+                const badgeText = getRiskBadgeText(risk);
+
+                const card = document.createElement('div');
+                card.className = `disease-card glass-dark rounded-lg p-6 card-hover animate-fadeInUp stagger-delay-${delays[index] + 1} border border-gray-700`;
+                card.style.overflow = 'hidden';
+
+                card.innerHTML = `
+                    <div class="text-4xl mb-3">${disease.icon}</div>
+                    <h3 class="text-base font-semibold text-gray-200 mb-2">${disease.name}</h3>
+                    <div class="mb-4">
+                        <div class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                            ${risk}%
+                        </div>
+                    </div>
+                    <span class="risk-badge ${badgeClass}">${badgeText}</span>
+                `;
+
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        function displayProgressBars(data) {
+            const barsContainer = document.getElementById('progressBars');
+            barsContainer.innerHTML = '';
+
+            const diseaseKeys = ['diabetes', 'heart', 'kidney', 'liver', 'stroke'];
+
+            diseaseKeys.forEach((key) => {
+                const disease = diseases[key];
+                const risk = data.results[key].risk;
+
+                const barHTML = `
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold text-gray-300 text-sm">${disease.icon} ${disease.name}</span>
+                            <span class="font-bold text-blue-400 text-sm">${risk}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" style="--progress-value: ${risk}%; width: 0%;" data-progress="${risk}"></div>
+                        </div>
+                    </div>
+                `;
+
+                barsContainer.innerHTML += barHTML;
+            });
+
+            // Animate progress bars
+            setTimeout(() => {
+                document.querySelectorAll('.progress-bar-fill').forEach(bar => {
+                    const progress = bar.getAttribute('data-progress');
+                    bar.style.width = progress + '%';
+                });
+            }, 100);
+        }
+
+        function displayPatientProfile(data) {
+            const profileGrid = document.getElementById('profileGrid');
+            profileGrid.innerHTML = '';
+
+            const profile = data.patient_profile;
+
+            const profileItems = [
+                { label: 'Age', value: profile.age || 'N/A', icon: '👤' },
+                { label: 'Gender', value: profile.gender || 'N/A', icon: '✓' },
+                { label: 'Hypertension', value: profile.hypertension || 'N/A', icon: '💊' },
+                { label: 'Heart Disease', value: profile.heart_disease || 'N/A', icon: '❤️' },
+                { label: 'Stroke History', value: profile.stroke || 'N/A', icon: '⚠️' },
+                { label: 'BMI', value: profile.bmi || 'N/A', icon: '⚖️' }
+            ];
+
+            profileItems.forEach((item) => {
+                const profileCard = document.createElement('div');
+                profileCard.className = 'glass-dark rounded-lg p-4 card-hover border border-gray-700';
+                profileCard.innerHTML = `
+                    <div class="text-xs text-gray-400 mb-1">${item.icon} ${item.label}</div>
+                    <div class="text-lg font-semibold text-gray-200">${item.value}</div>
+                `;
+                profileGrid.appendChild(profileCard);
+            });
+        }
+
+        function displayAIReport(data) {
+            const container = document.getElementById('aiReportContainer');
+            container.innerHTML = '';
+
+            const reportText = data.final_report || 'No report available';
+
+            // Parse and format the report
+            const sections = parseReportSections(reportText);
+            
+            sections.forEach(section => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'report-section';
+                
+                if (section.type === 'title') {
+                    sectionDiv.innerHTML = `<div class="report-title">${escapeHtml(section.content)}</div>`;
+                } else if (section.type === 'content') {
+                    sectionDiv.innerHTML = `<div class="report-content">${formatReportContent(section.content)}</div>`;
+                } else if (section.type === 'highlight') {
+                    sectionDiv.className = 'report-highlight';
+                    sectionDiv.innerHTML = `<div class="report-content">${escapeHtml(section.content)}</div>`;
+                } else if (section.type === 'list') {
+                    const listItems = section.content.split('\n').filter(line => line.trim());
+                    let listHTML = '<ul class="report-list">';
+                    listItems.forEach(item => {
+                        const cleanItem = item.replace(/^[-•*]\s*/, '').trim();
+                        if (cleanItem) {
+                            listHTML += `<li>${escapeHtml(cleanItem)}</li>`;
+                        }
+                    });
+                    listHTML += '</ul>';
+                    sectionDiv.innerHTML = listHTML;
+                }
+                
+                container.appendChild(sectionDiv);
+            });
+
+            // Add disclaimer
+            const disclaimerDiv = document.createElement('div');
+            disclaimerDiv.className = 'report-disclaimer mt-6';
+            disclaimerDiv.innerHTML = `
+                <strong>⚠️ Medical Disclaimer</strong><br>
+                This report is generated by artificial intelligence and provides analysis for informational purposes only. 
+                It is not a substitute for professional medical consultation. Please consult with a qualified healthcare provider 
+                for proper diagnosis and treatment recommendations.
+            `;
+            container.appendChild(disclaimerDiv);
+        }
+
+        function parseReportSections(text) {
+            const sections = [];
+            const lines = text.split('\n');
+            let currentSection = null;
+            let currentContent = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+
+                // Detect section headers (all caps or ending with colon)
+                if (trimmed && (trimmed === trimmed.toUpperCase() || trimmed.endsWith(':'))) {
+                    if (currentContent.length > 0) {
+                        sections.push({
+                            type: 'content',
+                            content: currentContent.join('\n')
+                        });
+                        currentContent = [];
+                    }
+                    sections.push({
+                        type: 'title',
+                        content: trimmed.replace(/:$/, '')
+                    });
+                }
+                // Detect list items
+                else if (trimmed && /^[-•*]/.test(trimmed)) {
+                    if (currentContent.length > 0) {
+                        sections.push({
+                            type: 'content',
+                            content: currentContent.join('\n')
+                        });
+                        currentContent = [];
+                    }
+                    sections.push({
+                        type: 'list',
+                        content: trimmed
+                    });
+                }
+                // Regular content
+                else if (trimmed) {
+                    currentContent.push(trimmed);
+                } else if (currentContent.length > 0 && trimmed === '') {
+                    // Empty line separates content
+                    sections.push({
+                        type: 'content',
+                        content: currentContent.join(' ')
+                    });
+                    currentContent = [];
+                }
+            });
+
+            if (currentContent.length > 0) {
+                sections.push({
+                    type: 'content',
+                    content: currentContent.join(' ')
+                });
+            }
+
+            return sections;
+        }
+
+        function formatReportContent(text) {
+            return escapeHtml(text)
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-300">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-400">$1</em>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============ UTILITY FUNCTIONS ============
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        function scrollToUpload() {
+            document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadReport() {
+            if (!currentData) return;
+
+            const reportContent = `
+╔════════════════════════════════════════════════════════════════╗
+║           AI HEALTH GUARDIAN - CLINICAL ANALYSIS REPORT         ║
+╚════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATIENT HEALTH SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Overall Health Score: ${document.getElementById('healthScore').textContent}/100
+Interpretation: ${document.getElementById('scoreInterpretation').textContent}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISEASE RISK ASSESSMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Diabetes Risk:          ${currentData.results.diabetes.risk}%
+Heart Disease Risk:     ${currentData.results.heart.risk}%
+Kidney Disease Risk:    ${currentData.results.kidney.risk}%
+Liver Disease Risk:     ${currentData.results.liver.risk}%
+Stroke Risk:            ${currentData.results.stroke.risk}%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PATIENT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${JSON.stringify(currentData.patient_profile, null, 2)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CLINICAL ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${currentData.final_report}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISCLAIMER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This report is generated by artificial intelligence and provides analysis 
+for informational purposes only. It is NOT a substitute for professional 
+medical consultation. Please consult with a qualified healthcare provider 
+for proper diagnosis and treatment recommendations.
+
+Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+            `;
+
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `health_report_${new Date().getTime()}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function newAnalysis() {
+            // Reset UI
+            document.getElementById('resultsContainer').classList.add('hidden-section');
+            document.getElementById('resultsContainer').classList.remove('show-section');
+            clearFile();
+            currentData = null;
+            scrollToUpload();
+        }
+        function toggleAboutSection() {
+
+    const section =
+        document.getElementById(
+            "about-project"
+        );
+
+    section.classList.toggle(
+        "hidden"
+    );
+
+    if (
+        !section.classList.contains(
+            "hidden"
+        )
+    ) {
+        section.scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+}
+    </script>
+</body>
+</html>
